@@ -2,7 +2,7 @@ import {NextResponse, type NextRequest} from "next/server";
 import {getPrivyId, hasPrivyServerAuth} from "@/lib/server/auth";
 import {hasDatabase} from "@/lib/server/db";
 import {getUserId} from "@/lib/server/play";
-import {demoRewards, listRewards} from "@/lib/server/rewards";
+import {demoRewards, emptyRewards, listRewards} from "@/lib/server/rewards";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,10 +13,14 @@ export async function GET(request: NextRequest) {
   }
 
   const privyId = await getPrivyId(request);
-  if (!privyId) return NextResponse.json(demoRewards());
+  if (!privyId) {
+    return NextResponse.json(emptyRewards());
+  }
 
   const userId = await getUserId(privyId);
-  if (!userId) return NextResponse.json(demoRewards());
+  if (!userId) {
+    return NextResponse.json(emptyRewards());
+  }
 
   try {
     return NextResponse.json(await listRewards(userId));

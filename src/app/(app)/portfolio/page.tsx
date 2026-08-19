@@ -215,17 +215,17 @@ export default function PortfolioPage() {
         </div>
       )}
 
-      {!rewards.claimable ? (
+      {!rewards.claimable && rewards.available.length > 0 ? (
         <p className="mt-5 px-0.5 text-[12px] leading-[1.5] text-faint">
           On-chain claims switch on once the contracts are deployed. Amounts
           shown are sample data until then.
         </p>
-      ) : (
+      ) : rewards.claimable ? (
         <p className="mt-5 px-0.5 text-[12px] leading-[1.5] text-faint">
           Wallet settings live under your profile photo. Transfers stay paused
           until the contracts are audited.
         </p>
-      )}
+      ) : null}
 
       <ConnectWalletSheet
         open={connectOpen}

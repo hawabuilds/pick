@@ -89,7 +89,14 @@ export function LessonSheet({
         ))}
       </div>
 
-      <div className="mt-6 rounded-[16px] border border-hairline bg-wash p-4">
+      <div
+        className={cn(
+          "mt-6 rounded-[16px] border p-4 transition-[border-color,background-color,box-shadow]",
+          passed
+            ? "border-green-deep bg-[rgba(0,200,5,0.07)] shadow-[0_0_0_10px_rgba(0,200,5,0.14)]"
+            : "border-hairline bg-wash",
+        )}
+      >
         <div className="mb-1 text-[11px] font-bold tracking-[0.09em] text-faint">
           QUICK CHECK
         </div>
@@ -113,9 +120,9 @@ export function LessonSheet({
                 }}
                 aria-pressed={selected}
                 className={cn(
-                  "flex items-center gap-3 rounded-[13px] border bg-card px-3.5 py-3 text-left transition-colors",
+                  "flex items-center gap-3 rounded-[13px] border bg-card px-3.5 py-3 text-left transition-[border-color,background-color,box-shadow]",
                   isRight
-                    ? "border-green-deep"
+                    ? "border-green-deep bg-[rgba(0,200,5,0.12)] shadow-[0_0_0_8px_rgba(0,200,5,0.16)]"
                     : selected
                       ? "border-ink"
                       : "border-hairline hover:bg-wash",
@@ -126,8 +133,8 @@ export function LessonSheet({
                   {option}
                 </span>
                 {isRight ? (
-                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-green text-[#04230A]">
-                    <CheckIcon className="h-3 w-3" />
+                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-green text-[#04230A] shadow-[0_0_0_6px_rgba(0,200,5,0.22)]">
+                    <CheckIcon className="h-3.5 w-3.5" />
                   </span>
                 ) : null}
               </button>
@@ -135,7 +142,11 @@ export function LessonSheet({
           })}
         </div>
 
-        {graded && !passed ? (
+        {passed && result?.explanation ? (
+          <p className="mt-3 text-[12.5px] font-medium leading-[1.5] text-green-deep">
+            {result.explanation}
+          </p>
+        ) : graded && !passed ? (
           <p className="mt-3 text-[12.5px] font-medium leading-[1.5] text-red">
             {result?.message}
           </p>

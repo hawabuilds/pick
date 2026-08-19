@@ -200,15 +200,6 @@ export default function LearnPage() {
           if (!active) return;
           void learn
             .submitAnswer({lessonId: active.id, answer: choice})
-            .then((result) => {
-              if (!result.correct) return;
-              learn.resetAnswer();
-              if (nextLesson) {
-                setActive(nextLesson);
-              } else {
-                setActive(null);
-              }
-            })
             .catch(() => undefined);
         }}
       />

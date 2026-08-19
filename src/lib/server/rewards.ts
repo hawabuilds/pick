@@ -98,6 +98,11 @@ export async function listRewards(userId: string): Promise<RewardsState> {
   return {available, history, claimable: canSignClaims};
 }
 
+/** Real auth, no rows yet — new accounts and pre-sync sessions. */
+export function emptyRewards(): RewardsState {
+  return {available: [], history: [], claimable: canSignClaims};
+}
+
 /** Shown when Supabase is not configured, so the tab is still explorable. */
 export function demoRewards(): RewardsState {
   return {
