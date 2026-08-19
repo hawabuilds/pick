@@ -1,0 +1,27 @@
+[profile.default]
+src = "src"
+out = "out"
+test = "test"
+script = "script"
+libs = ["lib"]
+solc = "0.8.24"
+optimizer = true
+optimizer_runs = 200
+bytecode_hash = "none"
+remappings = [
+  "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+  "forge-std/=lib/forge-std/src/",
+  "ds-test/=lib/ds-test/src/",
+]
+
+[fmt]
+line_length = 100
+tab_width = 4
+bracket_spacing = false
+
+[rpc_endpoints]
+rh_testnet = "${NEXT_PUBLIC_RH_TESTNET_RPC}"
+
+# Blockscout accepts any non-empty key.
+[etherscan]
+rh_testnet = {key = "blockscout", url = "https://explorer.testnet.chain.robinhood.com/api", chain = 46630}

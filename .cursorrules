@@ -1,0 +1,122 @@
+# Pick — project rules
+
+## What this is
+
+Pick is a free-to-play prediction game on Robinhood Chain that onboards everyday users
+into holding real-world assets (RWA). Users log in with X (an embedded wallet is created
+for them). Each day they call "up" or "down" on exactly 10 of the ~194 tokenized RWA
+stocks; the slate is submitted for the NEXT trading day and locks at 22:00 UTC the
+evening before. Correct calls earn points; a leaderboard ranks players and resets on a
+season cadence (start at 3-day, later daily). Top 20 earn RWA rewards; winners choose
+which stock to be paid in.
+
+The destination is ownership, not play: the point of the game is that a user with no
+crypto knowledge ends up self-custodying real tokenized shares.
+
+A separate passive path: a fee-on-transfer token (3% buy / 3% sell) splits tax 40% to
+holders as RWA dividends (passive, claim anytime), 40% to leaderboard winners, and 20%
+to new users who complete learn-to-earn tasks ($10 to the first 50 new users per season,
+once per account, must share completion on X). Rewards are claimed in the Rewards tab
+after connecting a wallet (MetaMask, Rabby, Coinbase, WalletConnect/Reown); on claim the
+user picks which RWA stock to receive, then gets a shareable card.
+
+## Hard rules — never violate
+
+- NO betting, staking, or wagering. The game is free to play.
+- Resolve picks off the mid of Robinhood's `/rhj/prices` quote, snapshotted once a day
+ at 22:00 UTC, compared against the previous trading day's snapshot. Never off a DEX
+ pool or spot token price: pool liquidity can be moved by anyone.
+- Chainlink is the integrity anchor, not the settlement source. Where a covered ticker's
+ feed disagrees with the REST mid beyond tolerance, VOID it rather than score it.
+- A REST price is the raw underlying share price. Never multiply it by the token
+ multiplier. A Chainlink answer already includes the multiplier, so divide it back out
+ before comparing the two. Getting this backwards silently corrupts every result.
+- Void, never guess. A ticker is voided for the slate on a corporate action in the
+ window, a trading halt, a failed cross-check, an untradeable spread, or a missing
+ price. A dividend or split moves the raw price for non-market reasons and would
+ otherwise pay out every "down" call on a company that did not fall.
+- A player's slate needs 7 of 10 scoreable tickers. Below that the whole slate voids and
+ the streak is preserved: they showed up, the prices did not.
+- A slate locks at the same instant its reference price is read. If those ever drift
+ apart, players can watch the market move and still get in.
+- One X account per player, with a minimum account age.
+- Exactly 10 picks per slate. Not 9, not 11.
+- No emojis in the UI or in code output. Use SVG line icons.
+- Never say "gas", "seed phrase", "sign transaction" or "private key" in user-facing
+ copy. The wallet is invisible; say "your wallet is set up for you".
+- Gas sponsorship is testnet-only and pinned to the claim contract. Never widen
+ `/api/aa/rpc` to sponsor an arbitrary target: a paymaster open to any call is a
+ paymaster balance someone else spends.
+- Adoption numbers are evidence, not marketing. Holdings are read from the chain, never
+ inferred from our own claim rows, and retention counts only cohorts old enough to have
+ had the chance.
+
+## Stack
+
+Next.js 14 App Router + TypeScript + Tailwind. Privy for auth and embedded wallets.
+wagmi + viem + Reown AppKit for external wallets. Supabase for Postgres, RLS, and cron.
+Foundry for contracts. Deployed on Vercel.
+
+## Chain
+
+Contracts deploy to Robinhood Chain testnet: chainId 46630, RPC
+https://rpc.testnet.chain.robinhood.com, explorer
+https://explorer.testnet.chain.robinhood.com. Testnet stock tokens available from the
+faucet: TSLA, AMZN, PLTR, NFLX, AMD.
+
+Prices are read from mainnet: chainId 4663, RPC https://rpc.mainnet.chain.robinhood.com
+(prefer `ALCHEMY_RPC_URL`), explorer https://robinhoodchain.blockscout.com. The real
+Stock Tokens and their Chainlink feeds exist only there, so the game reads mainnet
+prices while claims settle in testnet mocks until the contracts are audited.
+
+## Data-source policy
+
+All integrations and data use Robinhood Chain ecosystem partners — Robinhood `/rhj` REST
+(`/assets`, `/prices`, `/corporate-actions`), Chainlink, Alchemy (RPC + Data/Prices +
+account abstraction), Uniswap, Morpho, Paxos/USDG, Zerion — with EXACTLY ONE documented
+exception: a single news provider (`NEWS_API_KEY`, Finnhub) used only for stock-detail
+news, isolated in `src/lib/server/news.ts`, because no partner supplies equity news. Do
+not add any other non-partner data source (no Polygon.io, no Twelve Data).
+
+Concretely:
+
+- Universe and token addresses: `/rhj/assets`. Never hardcode an address — a token with
+ a matching ticker at another address is not a Robinhood Stock Token.
+- Prices and resolution: `/rhj/prices`, cross-checked against Chainlink.
+- Corporate actions: `/rhj/corporate-actions`.
+- Charts: our own `price_snapshots` table, enriched by Alchemy's Prices API.
+- Balances, RPC, gas sponsorship: Alchemy (Zerion may enrich balances).
+- News: `news.ts` only. It must stay the single non-partner network call in the app.
+
+## Design language
+
+- Premium white. Background near-white with a faint green radial glow.
+- Cards: white, hairline border `rgba(11,15,12,0.09)`, radius 16-20px, soft shadows.
+- Font Manrope 400-800 via `next/font`.
+- Ink `#0B0F0C`, muted `#5C665F`, faint `#8A938C`, wash `#F4F7F5`.
+- Green `#00C805`, deep green `#068A3A` for green text on white, red `#FF5A52` for
+  "down" and losses.
+- Tabular figures on every number: `font-variant-numeric: tabular-nums`.
+- Mobile-first. Full-bleed on phones, centered ~430px frame on desktop.
+- Respect safe-area insets and `prefers-reduced-motion`.
+- `tell-preview.html` (in the repo root) is the visual source of truth. It is branded
+  "Tell", an older working name — the app is called Pick.
+
+## Code conventions
+
+- Tailwind for layout and one-off styles; design tokens live as CSS variables in
+  `src/app/globals.css` and are mirrored into `tailwind.config.ts`.
+- Server-only secrets (`SUPABASE_SERVICE_ROLE_KEY`, `PRIVY_APP_SECRET`,
+  `CLAIM_SIGNER_PRIVATE_KEY`, `ALCHEMY_API_KEY`, `ALCHEMY_TESTNET_RPC_URL`,
+  `ALCHEMY_GAS_POLICY_ID`, `ADMIN_API_TOKEN`, `NEWS_API_KEY`) must never be imported into
+  a client component.
+- Validate every API route body with zod.
+- Prefer server-side data access through `src/lib/db` (service role) over direct
+  browser-to-Supabase writes, because auth is Privy rather than Supabase Auth.
+- The app must keep running when env vars are missing: fall back to demo data and say
+  so in the UI.
+
+## Before mainnet
+
+Professional audit of all contracts, real DEX liquidity with oracle-based slippage
+guards, legal review of the reward mechanics, and real terms/privacy pages.

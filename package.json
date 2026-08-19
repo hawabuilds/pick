@@ -1,0 +1,45 @@
+{
+  "name": "pick",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "seed": "tsx scripts/seed.ts",
+    "reset:users": "tsx scripts/reset-users.ts",
+    "verify:calendar": "tsx scripts/verify-calendar.ts",
+    "verify:feeds": "tsx scripts/verify-feeds.ts",
+    "verify:resolve": "tsx scripts/verify-resolve.ts",
+    "verify:metrics": "tsx scripts/verify-metrics.ts",
+    "contracts:install": "node scripts/install-contract-libs.mjs"
+  },
+  "dependencies": {
+    "@privy-io/node": "^0.29.0",
+    "@privy-io/react-auth": "^3.37.1",
+    "@supabase/supabase-js": "^2.112.3",
+    "@tanstack/react-query": "^5.101.4",
+    "jose": "^6.2.9",
+    "next": "14.2.35",
+    "permissionless": "^0.4.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "viem": "^2.55.17",
+    "wagmi": "^3.7.6",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "dotenv": "^17.4.2",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.35",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "tsx": "^4.23.12",
+    "typescript": "^5"
+  }
+}

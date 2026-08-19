@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --card: #ffffff;
+  --ink: #0b0f0c;
+  --muted: #5c665f;
+  --faint: #8a938c;
+  --hairline: rgba(11, 15, 12, 0.09);
+  --wash: #f4f7f5;
+  --green: #00c805;
+  --green-deep: #068a3a;
+  --red: #ff5a52;
+  --premium-bg: radial-gradient(
+      560px 340px at 88% 4%,
+      rgba(0, 200, 5, 0.09),
+      transparent 66%
+    ),
+    radial-gradient(700px 480px at 2% 102%, rgba(0, 200, 5, 0.045), transparent 70%),
+    #ffffff;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: #e7ece8;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The phone-sized app frame: full-bleed on phones, a centred device on desktop. */
+.app-frame {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--card);
+}
+
+#app-overlays {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+
+@media (min-width: 600px) {
+  body {
+    background: radial-gradient(1100px 620px at 50% -8%, #edf2ee 0%, transparent 62%),
+      #e7ece8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    padding: 24px;
+  }
+
+  .app-frame {
+    width: 430px;
+    height: 860px;
+    max-height: calc(100dvh - 48px);
+    border-radius: 38px;
+    box-shadow: 0 44px 100px -34px rgba(9, 24, 14, 0.46),
+      0 0 0 1px rgba(11, 15, 12, 0.05);
+  }
+}
+
+@layer utilities {
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .bottom-safe {
+    bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Scrollbars stay out of the way without hiding overflow affordances entirely. */
+.scroll-quiet {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(11, 15, 12, 0.16) transparent;
+}
+
+.scroll-quiet::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scroll-quiet::-webkit-scrollbar-thumb {
+  background: rgba(11, 15, 12, 0.16);
+  border-radius: 999px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Tell — preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --card:#FFFFFF;--ink:#0B0F0C;--muted:#5C665F;--faint:#8A938C;
+    --hairline:rgba(11,15,12,0.09);--wash:#F4F7F5;
+    --green:#00C805;--green-deep:#068A3A;--red:#FF5A52;
+    --font:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --premium-bg:radial-gradient(560px 340px at 88% 4%, rgba(0,200,5,0.09), transparent 66%),radial-gradient(700px 480px at 2% 102%, rgba(0,200,5,0.045), transparent 70%),#FFFFFF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--font);background:#E7ECE8;color:var(--ink);-webkit-font-smoothing:antialiased}
+  .app{position:relative;width:100%;height:100dvh;overflow:hidden;background:var(--card)}
+  @media (min-width:600px){
+    body{background:radial-gradient(1100px 620px at 50% -8%, #EDF2EE 0%, transparent 62%), #E7ECE8;display:flex;align-items:center;justify-content:center;min-height:100dvh;padding:24px}
+    .app{width:430px;height:860px;max-height:calc(100dvh - 48px);border-radius:38px;box-shadow:0 44px 100px -34px rgba(9,24,14,0.46), 0 0 0 1px rgba(11,15,12,0.05)}
+  }
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .45s ease}
+  .screen.active{opacity:1;visibility:visible}
+
+  /* logo */
+  .wordmark{display:flex;align-items:center;gap:9px;font-weight:800;font-size:21px;letter-spacing:-0.03em;color:var(--ink)}
+  .mark{width:31px;height:31px;border-radius:10px;background:var(--green);display:grid;place-items:center;box-shadow:0 8px 18px -8px rgba(0,200,5,0.75)}
+  .mark svg{width:17px;height:17px}
+
+  /* LOGIN */
+  .login{padding:26px 30px 30px;background:var(--premium-bg);overflow-y:auto}
+  .brandrow{display:flex;align-items:center}
+  .login-body{flex:1;display:flex;flex-direction:column;justify-content:center;gap:28px;padding:6px 0 22px}
+  .hero-h{font-weight:700;font-size:clamp(28px,7.4vw,34px);line-height:1.12;letter-spacing:-0.025em;color:var(--ink)}
+  .hero-h .rwa{color:var(--green-deep)}
+  .hero-line{font-size:16px;line-height:1.55;color:var(--muted);max-width:33ch;margin-top:14px;font-weight:500}
+  .peek{background:var(--card);border:1px solid var(--hairline);border-radius:20px;padding:15px 16px;box-shadow:0 24px 46px -30px rgba(9,24,14,0.42);transform:rotate(-1.3deg)}
+  .peek .prow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .peek .tkr{display:flex;flex-direction:column}
+  .peek .nm{font-weight:800;font-size:15px}
+  .peek .px{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .pill{font-size:12px;font-weight:700;padding:8px 13px;border-radius:11px;border:1px solid transparent}
+  .pill.up{color:var(--green-deep);background:rgba(0,200,5,0.11);border-color:rgba(0,200,5,0.24)}
+  .pill.down{color:var(--red);background:rgba(255,90,82,0.09);border-color:rgba(255,90,82,0.2)}
+  .peek .calls{display:flex;gap:8px}
+  .peek .q{margin-top:12px;font-size:12.5px;color:var(--muted);font-weight:500}
+  .cta{margin-top:2px}
+  .btn-primary{width:100%;border:none;cursor:pointer;font-family:var(--font);background:var(--ink);color:#fff;font-weight:700;font-size:16px;letter-spacing:-0.01em;padding:18px 20px;border-radius:17px;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .16s ease, box-shadow .28s ease;box-shadow:0 16px 34px -14px rgba(11,15,12,0.55)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 24px 46px -16px rgba(0,200,5,0.48)}
+  .btn-primary svg{width:16px;height:16px}
+
+  /* generic centered modal */
+  .overlay{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(8,12,9,0.46);backdrop-filter:blur(7px);opacity:0;visibility:hidden;transition:opacity .3s ease}
+  .overlay.show{opacity:1;visibility:visible}
+  .modal-card{position:relative;width:100%;max-width:366px;background:var(--card);border-radius:28px;padding:30px 24px 24px;box-shadow:0 40px 90px -24px rgba(9,24,14,0.55), 0 0 0 1px rgba(11,15,12,0.05);transform:scale(.93);opacity:.4;transition:transform .34s cubic-bezier(.2,.9,.25,1), opacity .3s ease;max-height:92%;overflow-y:auto}
+  .overlay.show .modal-card{transform:scale(1);opacity:1}
+  .mclose{position:absolute;top:16px;right:16px;width:32px;height:32px;border:none;cursor:pointer;border-radius:50%;background:rgba(11,15,12,0.05);color:var(--muted);display:grid;place-items:center;transition:.15s;z-index:2}
+  .mclose:hover{background:rgba(11,15,12,0.1)}
+  .mclose svg{width:15px;height:15px}
+  .modal-card h2{font-weight:800;font-size:22px;letter-spacing:-0.03em;margin-bottom:22px;color:var(--ink);text-align:center}
+  .authbtn{width:100%;cursor:pointer;font-family:var(--font);font-weight:700;font-size:15px;padding:15px 16px;border-radius:15px;display:flex;align-items:center;gap:12px;border:1px solid var(--hairline);background:var(--card);color:var(--ink);margin-bottom:10px;transition:transform .13s ease, box-shadow .22s ease}
+  .authbtn:hover{transform:translateY(-1px)}
+  .authbtn.x{background:var(--ink);color:#fff;border-color:var(--ink);justify-content:center;box-shadow:0 12px 26px -14px rgba(0,0,0,.5)}
+  .authbtn svg{width:18px;height:18px}
+  .wico{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;flex-shrink:0}
+  .terms{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:16px;max-width:30ch;margin-left:auto;margin-right:auto;text-align:center}
+  .terms a{color:var(--green-deep);text-decoration:none;font-weight:600}
+
+  /* DASHBOARD */
+  .dashboard{background:var(--premium-bg)}
+  .dhead{padding:22px 22px 6px;display:flex;align-items:center;justify-content:space-between}
+  .dhead .wordmark{font-size:19px}
+  .dhead .mark{width:28px;height:28px;border-radius:9px}
+  .dhead .mark svg{width:15px;height:15px}
+  .profile{position:relative}
+  .avatar{width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;padding:0;background:linear-gradient(135deg,#00C805,#0B7A3C);color:#fff;font-weight:800;font-size:15px;display:grid;place-items:center;box-shadow:0 0 0 2px #fff, 0 6px 16px -8px rgba(9,24,14,.4)}
+  .menu{position:absolute;right:0;top:48px;width:190px;background:var(--card);border:1px solid var(--hairline);border-radius:16px;box-shadow:0 24px 50px -18px rgba(9,24,14,.4);padding:8px;z-index:30;opacity:0;visibility:hidden;transform:translateY(-6px);transition:.18s ease}
+  .menu.show{opacity:1;visibility:visible;transform:none}
+  .menu-user{padding:9px 11px 10px;border-bottom:1px solid var(--hairline);margin-bottom:6px}
+  .menu-user b{display:block;font-size:14px;font-weight:800}
+  .menu-user small{font-size:12px;color:var(--faint)}
+  .menu-item{width:100%;text-align:left;border:none;background:none;cursor:pointer;font-family:var(--font);font-weight:700;font-size:14px;color:var(--red);padding:10px 11px;border-radius:10px;display:flex;align-items:center;gap:9px}
+  .menu-item:hover{background:var(--wash)}
+  .menu-item svg{width:16px;height:16px}
+
+  .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 22px calc(160px + env(safe-area-inset-bottom))}
+  .tab-content{display:none;animation:rise .35s ease}
+  .tab-content.active{display:block}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .greet{margin:2px 2px 18px;font-size:24px;font-weight:800;letter-spacing:-0.03em;color:var(--ink)}
+  .searchbar{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--hairline);border-radius:14px;padding:13px 15px;margin-bottom:16px;transition:border-color .18s, box-shadow .18s}
+  .searchbar:focus-within{border-color:rgba(0,200,5,0.5);box-shadow:0 0 0 3px rgba(0,200,5,0.1)}
+  .searchbar svg{width:17px;height:17px;color:var(--faint);flex-shrink:0}
+  .searchbar input{flex:1;border:none;outline:none;background:none;font-family:var(--font);font-size:14.5px;font-weight:500;color:var(--ink)}
+  .searchbar input::placeholder{color:var(--faint);font-weight:500}
+
+  .mkhead{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 13px}
+  .mkhead .t{font-size:14px;font-weight:800;letter-spacing:-0.01em}
+  .mkhead .t span{color:var(--faint);font-weight:600;margin-left:5px}
+  .layswitch{display:flex;gap:2px;background:var(--wash);border:1px solid var(--hairline);border-radius:10px;padding:3px}
+  .lay-btn{width:30px;height:26px;border:none;background:none;cursor:pointer;border-radius:7px;display:grid;place-items:center;color:var(--faint);transition:.15s}
+  .lay-btn svg{width:15px;height:15px}
+  .lay-btn.active{background:var(--card);color:var(--ink);box-shadow:0 2px 6px -3px rgba(9,24,14,.3)}
+
+  .stocks.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+  .stocks.list{display:flex;flex-direction:column;gap:10px}
+  .scard{background:var(--card);border:1px solid var(--hairline);border-radius:18px;padding:15px;cursor:pointer;transition:transform .14s ease, box-shadow .2s ease, border-color .2s;box-shadow:0 14px 30px -26px rgba(9,24,14,.35)}
+  .scard:hover{transform:translateY(-2px);box-shadow:0 22px 40px -26px rgba(9,24,14,.4);border-color:rgba(11,15,12,0.14)}
+  .stocks.list .scard{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:14px}
+  .scard-id .tk{font-weight:800;font-size:15px;letter-spacing:-0.01em;color:var(--ink)}
+  .scard-id .nm{font-size:12px;color:var(--faint);font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .spark{width:100%;height:30px;margin:12px 0 10px}
+  .stocks.list .spark{width:64px;height:30px;margin:0}
+  .scard-price{display:flex;align-items:baseline;gap:8px;margin-bottom:12px}
+  .stocks.list .scard-price{flex-direction:column;align-items:flex-end;gap:2px;margin:0;text-align:right}
+  .px{font-weight:800;font-size:16px;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
+  .chg{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums}
+  .chg.up{color:var(--green-deep)}.chg.down{color:var(--red)}
+  .scard-calls{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .stocks.list .scard-calls{grid-column:1 / -1;margin-top:4px}
+  .cbtn{cursor:pointer;border:1px solid var(--hairline);background:var(--card);border-radius:11px;padding:10px 0;font-family:var(--font);font-weight:700;font-size:12.5px;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:5px;transition:.15s}
+  .cbtn:hover{border-color:rgba(11,15,12,0.2)}
+  .cbtn.up.sel{background:rgba(0,200,5,0.13);border-color:var(--green);color:var(--green-deep)}
+  .cbtn.down.sel{background:rgba(255,90,82,0.11);border-color:var(--red);color:var(--red)}
+
+  .submitbar{position:absolute;left:0;right:0;bottom:calc(60px + env(safe-area-inset-bottom));padding:22px 22px 12px;pointer-events:none;background:linear-gradient(to top, #FFFFFF 55%, rgba(255,255,255,0));display:none}
+  .submitbar.show{display:block}
+  .btn-submit{pointer-events:auto;width:100%;border:none;cursor:not-allowed;font-family:var(--font);font-weight:800;font-size:15px;background:var(--wash);color:var(--faint);padding:16px;border-radius:15px;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s;letter-spacing:-0.01em}
+  .btn-submit .cnt{font-variant-numeric:tabular-nums;opacity:.85}
+  .btn-submit.ready{cursor:pointer;background:var(--green);color:#04230A;box-shadow:0 16px 32px -14px rgba(0,200,5,0.6)}
+  .btn-submit.ready:hover{transform:translateY(-2px)}
+  .btn-submit.flash{animation:flash .4s}
+  @keyframes flash{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .btn-submit.done{background:var(--ink);color:#fff;cursor:default}
+
+  /* leaderboard */
+  .lbhead{display:flex;align-items:center;justify-content:space-between;margin:6px 2px 16px}
+  .lbhead h2{font-size:22px;font-weight:800;letter-spacing:-0.03em}
+  .lbhead span{font-size:12px;color:var(--faint);font-weight:600}
+  .lrow{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--hairline);border-radius:15px;padding:11px 14px;margin-bottom:9px}
+  .rank{font-weight:800;font-size:15px;width:20px;color:var(--faint);font-variant-numeric:tabular-nums;text-align:center}
+  .rank.top{color:var(--green-deep)}
+  .lpfp{width:38px;height:38px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px}
+  .who{flex:1;min-width:0}
+  .who b{font-size:14px;color:var(--ink);font-weight:700;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .who small{font-size:12px;color:var(--faint);font-weight:500}
+  .pts{font-weight:800;font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .me{border-color:rgba(0,200,5,0.4);background:rgba(0,200,5,0.05)}
+
+  /* rewards */
+  .rew-title{font-size:22px;font-weight:800;letter-spacing:-0.03em;margin:6px 2px 16px}
+  .claim-hero{background:linear-gradient(180deg,#FFFFFF,#FAFDFB);border:1px solid var(--hairline);border-radius:20px;padding:22px;margin-bottom:12px;box-shadow:0 20px 44px -32px rgba(9,24,14,.45)}
+  .claim-hero .k{font-size:11px;color:var(--faint);font-weight:700;letter-spacing:.09em}
+  .claim-hero .big{font-size:40px;font-weight:800;color:var(--ink);margin:9px 0 3px;letter-spacing:-0.035em;font-variant-numeric:tabular-nums}
+  .claim-hero .n{font-size:13px;color:var(--muted);font-weight:500}
+  .wallet-card{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--hairline);border-radius:16px;padding:14px 16px;margin-bottom:20px}
+  .wallet-card .wl{display:flex;align-items:center;gap:12px;min-width:0}
+  .wallet-card .wi{width:38px;height:38px;border-radius:11px;background:var(--wash);display:grid;place-items:center;color:var(--ink);flex-shrink:0}
+  .wallet-card .wi svg{width:19px;height:19px}
+  .wallet-card b{font-size:13.5px;font-weight:700;display:block}
+  .wallet-card .addr{font-size:12px;color:var(--faint);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin-top:1px}
+  .wallet-card .lbl{font-size:12px;color:var(--faint);margin-top:1px}
+  .wbtn{cursor:pointer;font-weight:700;font-size:13px;color:#fff;background:var(--ink);border:none;border-radius:11px;padding:11px 16px;white-space:nowrap}
+  .wbtn.ghost{background:var(--wash);color:var(--muted)}
+  .connected-dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(0,200,5,.18);flex-shrink:0}
+  .seclabel{font-size:11px;font-weight:700;color:var(--faint);letter-spacing:.09em;margin:20px 2px 11px}
+  .rcard{display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--hairline);border-radius:16px;padding:15px;margin-bottom:10px}
+  .ricon{width:40px;height:40px;border-radius:12px;background:var(--wash);display:grid;place-items:center;color:var(--green-deep);flex-shrink:0}
+  .ricon svg{width:20px;height:20px}
+  .rcard .mid{flex:1;min-width:0}
+  .rcard .cname{font-weight:700;font-size:14.5px;letter-spacing:-0.01em}
+  .rcard .cmeta{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .rcard .cmeta b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
+  .claimbtn{cursor:pointer;font-weight:700;font-size:13px;color:#04230A;background:var(--green);border:none;border-radius:11px;padding:11px 17px;white-space:nowrap;transition:.15s}
+  .claimbtn:hover{filter:brightness(.96)}
+  .histcard{background:var(--card);border:1px solid var(--hairline);border-radius:16px;padding:2px 16px}
+  .hrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid var(--hairline)}
+  .hrow:last-child{border-bottom:none}
+  .hrow .cname{font-weight:700;font-size:13.5px}
+  .hrow .cmeta{font-size:12px;color:var(--faint);margin-top:2px;font-variant-numeric:tabular-nums}
+  .hrow .amt{font-weight:800;font-size:14.5px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .empty{font-size:13px;color:var(--faint);padding:14px 2px}
+  .checkwrap{width:64px;height:64px;border-radius:50%;background:var(--green);display:grid;place-items:center;margin:0 auto 16px;box-shadow:0 0 0 8px rgba(0,200,5,.16)}
+  .checkwrap svg{width:30px;height:30px}
+
+  /* learn */
+  .learn-hero{background:var(--card);border:1px solid var(--hairline);border-radius:20px;padding:22px;margin:6px 0 14px;text-align:center}
+  .learn-hero .badge{font-size:32px;font-weight:800;color:var(--green-deep);letter-spacing:-0.03em}
+  .learn-hero h3{font-size:18px;color:var(--ink);margin:8px 0 6px;font-weight:800;letter-spacing:-0.02em}
+  .learn-hero p{font-size:13px;color:var(--muted);line-height:1.5}
+  .task{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--hairline);border-radius:15px;padding:13px 14px;margin-bottom:9px}
+  .tnum{width:26px;height:26px;border-radius:8px;background:var(--wash);color:var(--green-deep);font-weight:800;font-size:12px;display:grid;place-items:center;flex-shrink:0}
+  .task b{font-size:13.5px;color:var(--ink);font-weight:700}
+  .task small{display:block;font-size:11.5px;color:var(--faint);margin-top:1px}
+
+  /* tab bar */
+  .tabbar{position:absolute;left:0;right:0;bottom:0;display:flex;background:rgba(255,255,255,0.9);backdrop-filter:blur(16px);border-top:1px solid var(--hairline);padding:9px 8px calc(9px + env(safe-area-inset-bottom))}
+  .tab{flex:1;cursor:pointer;background:none;border:none;color:var(--faint);display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 0;transition:color .18s ease}
+  .tab svg{width:22px;height:22px}
+  .tab small{font-size:10.5px;font-weight:700}
+  .tab.active{color:var(--green-deep)}
+
+  /* bottom sheets */
+  .sheet-ov{position:absolute;inset:0;z-index:55;display:flex;align-items:flex-end;justify-content:center;background:rgba(8,12,9,0.46);backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:opacity .3s ease}
+  .sheet-ov.show{opacity:1;visibility:visible}
+  .sheet{width:100%;background:var(--card);border-radius:26px 26px 0 0;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .4s cubic-bezier(.2,.9,.25,1)}
+  .sheet-ov.show .sheet{transform:translateY(0)}
+  @media (min-width:600px){.sheet{max-width:430px}}
+  .stock-sheet{height:90%}
+  .sheet-head{display:flex;align-items:flex-start;justify-content:space-between;padding:20px 22px 8px}
+  .sheet-head .stk{font-weight:800;font-size:12px;color:var(--faint);letter-spacing:.02em}
+  .sheet-head .snm{font-weight:800;font-size:22px;letter-spacing:-0.03em;margin:1px 0 8px}
+  .sheet-head .sp{display:flex;align-items:baseline;gap:9px}
+  .sheet-head .sp .px{font-size:24px}
+  .sheet-body{flex:1;overflow-y:auto;padding:0 22px 24px}
+  .tframe{display:flex;gap:6px;margin:14px 0 6px}
+  .tf{border:none;cursor:pointer;font-family:var(--font);font-weight:700;font-size:12px;color:var(--faint);background:none;padding:6px 12px;border-radius:9px}
+  .tf.active{background:rgba(0,200,5,0.12);color:var(--green-deep)}
+  .chart{width:100%;height:150px;margin:6px 0 18px}
+  .newshd{font-size:13px;font-weight:800;letter-spacing:-0.01em;margin:6px 0 12px}
+  .article{display:flex;flex-direction:column;gap:5px;padding:13px 0;border-top:1px solid var(--hairline)}
+  .article .ah{font-size:14px;font-weight:700;line-height:1.35;color:var(--ink)}
+  .article .am{font-size:12px;color:var(--faint);font-weight:600}
+  .sheet-foot{padding:14px 22px calc(18px + env(safe-area-inset-bottom));border-top:1px solid var(--hairline);display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--card)}
+  .foot-btn{cursor:pointer;font-family:var(--font);font-weight:800;font-size:15px;padding:15px 0;border-radius:14px;border:1px solid var(--hairline);background:var(--card);display:flex;align-items:center;justify-content:center;gap:7px}
+  .foot-btn.up{color:var(--green-deep)}.foot-btn.up:hover{background:rgba(0,200,5,0.1);border-color:var(--green)}
+  .foot-btn.down{color:var(--red)}.foot-btn.down:hover{background:rgba(255,90,82,0.09);border-color:var(--red)}
+
+  /* claim select sheet */
+  .claim-sheet{height:80%}
+  .sheet-title{padding:20px 22px 4px;display:flex;align-items:center;justify-content:space-between}
+  .sheet-title h3{font-size:18px;font-weight:800;letter-spacing:-0.02em}
+  .sheet-search{padding:12px 22px 6px}
+  .selrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border:1px solid var(--hairline);border-radius:14px;margin-bottom:8px;cursor:pointer;transition:.15s}
+  .selrow:hover{border-color:rgba(11,15,12,0.2)}
+  .selrow.sel{border-color:var(--green);background:rgba(0,200,5,0.06)}
+  .selrow .l{display:flex;align-items:center;gap:11px}
+  .selrow .tk{font-weight:800;font-size:14px}
+  .selrow .nm{font-size:12px;color:var(--faint);font-weight:600}
+  .selrow .rc{width:20px;height:20px;border-radius:50%;border:2px solid var(--hairline);display:grid;place-items:center}
+  .selrow.sel .rc{border-color:var(--green);background:var(--green)}
+  .selrow.sel .rc:after{content:"";width:7px;height:7px;border-radius:50%;background:#fff}
+
+  /* share (flex) card */
+  .share-card{position:relative;width:100%;max-width:372px;background:var(--card);border-radius:26px;padding:0;overflow:hidden;box-shadow:0 40px 90px -24px rgba(9,24,14,0.55), 0 0 0 1px rgba(11,15,12,0.05);transform:scale(.93);opacity:.4;transition:transform .34s cubic-bezier(.2,.9,.25,1), opacity .3s ease;max-height:94%;display:flex;flex-direction:column}
+  .overlay.show .share-card{transform:scale(1);opacity:1}
+  .flex-face{background:linear-gradient(150deg,#0B0F0C, #10261A 70%, #0B3D1F);color:#fff;padding:22px 22px 20px}
+  .flex-face .ftop{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .flex-face .ftop .wordmark{color:#fff;font-size:18px}
+  .flex-face .ftop .mark{box-shadow:none}
+  .flex-face .fdate{font-size:11px;color:rgba(255,255,255,.6);font-weight:700;letter-spacing:.03em}
+  .flex-face h3{font-size:20px;font-weight:800;letter-spacing:-0.02em;margin-bottom:14px}
+  .pickgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pchip{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:11px;padding:9px 11px}
+  .pchip .pt{font-weight:800;font-size:13px}
+  .pchip .pd{font-weight:800;font-size:12px}
+  .pchip .pd.up{color:#3DF07A}.pchip .pd.down{color:#FF7A73}
+  .claimface{text-align:center;padding:30px 22px 24px}
+  .claimface .cbig{font-size:40px;margin-bottom:6px}
+  .claimface h3{font-size:22px;font-weight:800;letter-spacing:-0.02em}
+  .claimface p{font-size:13.5px;color:rgba(255,255,255,.75);margin-top:6px}
+  .share-foot{padding:16px 20px 20px;display:flex;flex-direction:column;gap:9px}
+  .btn-x{width:100%;cursor:pointer;font-family:var(--font);font-weight:800;font-size:15px;background:var(--ink);color:#fff;border:none;border-radius:15px;padding:15px;display:flex;align-items:center;justify-content:center;gap:9px}
+  .btn-x svg{width:17px;height:17px}
+  .btn-ghost{width:100%;cursor:pointer;font-family:var(--font);font-weight:700;font-size:14px;background:none;color:var(--muted);border:none;padding:6px}
+
+  :focus-visible{outline:2px solid var(--green);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- LOGIN -->
+  <section id="login" class="screen login active">
+    <div class="brandrow"><div class="wordmark"><span class="mark"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20L20 4M20 4h-7M20 4v7" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Tell</div></div>
+    <div class="login-body">
+      <div>
+        <h1 class="hero-h">Making <span class="rwa">RWA</span> global for all</h1>
+        <p class="hero-line">Where users earn RWA by holding, playing and learning how they work.</p>
+      </div>
+      <div class="peek" aria-hidden="true">
+        <div class="prow"><div class="tkr"><div class="nm">NVIDIA</div><div class="px">$184.20 today</div></div><div class="calls"><span class="pill up">&#9650; Up</span><span class="pill down">&#9660; Down</span></div></div>
+        <div class="q">Will it close up or down? Make your call.</div>
+      </div>
+      <div class="cta"><button class="btn-primary" onclick="openModal()">Join us <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="dashboard" class="screen dashboard">
+    <div class="dhead">
+      <div class="wordmark"><span class="mark"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20L20 4M20 4h-7M20 4v7" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Tell</div>
+      <div class="profile" id="profile">
+        <button class="avatar" onclick="toggleMenu(event)" title="Profile">H</button>
+        <div class="menu" id="profileMenu">
+          <div class="menu-user"><b>Hawa</b><small>@hawabuilds</small></div>
+          <button class="menu-item" onclick="logout()"><svg viewBox="0 0 24 24" fill="none"><path d="M16 17l5-5-5-5M21 12H9M12 3H6a2 2 0 00-2 2v14a2 2 0 002 2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Log out</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="scroll">
+      <div class="tab-content active" id="tab-play">
+        <div class="greet">Hello, Hawa</div>
+        <div class="searchbar"><svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="text" placeholder="Search 193 RWA stocks" oninput="searchStocks(this.value)" /></div>
+        <div class="mkhead"><div class="t">Tomorrow's markets <span>193</span></div><div class="layswitch"><button class="lay-btn active" onclick="setLayout('grid',this)"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/></svg></button><button class="lay-btn" onclick="setLayout('list',this)"><svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div></div>
+        <div id="stockGrid" class="stocks grid"></div>
+      </div>
+
+      <div class="tab-content" id="tab-leaderboard">
+        <div class="lbhead"><h2>Leaderboard</h2><span>Resets in 2d 4h</span></div>
+        <div class="lrow"><div class="rank top">1</div><div class="lpfp" style="background:linear-gradient(135deg,#7C5CFF,#3D2BA8)">D</div><div class="who"><b>Degen Oracle</b><small>@degenoracle</small></div><div class="pts">512</div></div>
+        <div class="lrow"><div class="rank top">2</div><div class="lpfp" style="background:linear-gradient(135deg,#FF8A3D,#C24A12)">M</div><div class="who"><b>Market Maxi</b><small>@marketmaxi</small></div><div class="pts">498</div></div>
+        <div class="lrow"><div class="rank top">3</div><div class="lpfp" style="background:linear-gradient(135deg,#00C805,#0B7A3C)">S</div><div class="who"><b>Stock Whisperer</b><small>@stockwhisperer</small></div><div class="pts">471</div></div>
+        <div class="lrow"><div class="rank">4</div><div class="lpfp" style="background:linear-gradient(135deg,#3DBBFF,#1465B8)">C</div><div class="who"><b>Calls Only</b><small>@callsonly</small></div><div class="pts">440</div></div>
+        <div class="lrow"><div class="rank">5</div><div class="lpfp" style="background:linear-gradient(135deg,#FF5C93,#B01253)">L</div><div class="who"><b>Luna Trades</b><small>@lunatrades</small></div><div class="pts">418</div></div>
+        <div class="lrow"><div class="rank">6</div><div class="lpfp" style="background:linear-gradient(135deg,#F5C518,#B8860B)">T</div><div class="who"><b>Tape Reader</b><small>@tapereader</small></div><div class="pts">395</div></div>
+        <div class="lrow me"><div class="rank">12</div><div class="lpfp" style="background:linear-gradient(135deg,#00C805,#0B7A3C)">H</div><div class="who"><b>Hawa</b><small>@hawabuilds</small></div><div class="pts">248</div></div>
+      </div>
+
+      <div class="tab-content" id="tab-rewards"><div id="rewardsBody"></div></div>
+
+      <div class="tab-content" id="tab-learn">
+        <div class="learn-hero"><div class="badge">+$10</div><h3>Earn your first real stock</h3><p>Finish three quick lessons and share on X. We'll drop $10 of a real share into your wallet &mdash; pick which one.</p></div>
+        <div class="task"><div class="tnum">1</div><div><b>What is a real-world asset?</b><small>60-second read</small></div></div>
+        <div class="task"><div class="tnum">2</div><div><b>How calls &amp; the leaderboard work</b><small>60-second read</small></div></div>
+        <div class="task"><div class="tnum">3</div><div><b>Make your first call</b><small>Try one prediction</small></div></div>
+      </div>
+    </div>
+
+    <div class="submitbar show" id="submitBar"><button class="btn-submit" id="submitBtn" disabled onclick="submitCalls()"><span class="lbl">Pick tomorrow's calls</span> <span class="cnt">0/10</span></button></div>
+
+    <nav class="tabbar">
+      <button class="tab active" data-tab="play" onclick="switchTab(this)"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg><small>Play</small></button>
+      <button class="tab" data-tab="leaderboard" onclick="switchTab(this)"><svg viewBox="0 0 24 24" fill="none"><path d="M7 20V11M12 20V4M17 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><small>Leaderboard</small></button>
+      <button class="tab" data-tab="rewards" onclick="switchTab(this)"><svg viewBox="0 0 24 24" fill="none"><path d="M20 12v8H4v-8M2 7h20v5H2V7zM12 22V7M12 7S9 3 6.5 4.5 8 7 12 7z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg><small>Rewards</small></button>
+      <button class="tab" data-tab="learn" onclick="switchTab(this)"><svg viewBox="0 0 24 24" fill="none"><path d="M3 7l9-4 9 4-9 4-9-4zM7 10v5c0 1 2 2.5 5 2.5S17 16 17 15v-5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg><small>Learn</small></button>
+    </nav>
+  </section>
+
+  <!-- AUTH MODAL -->
+  <div class="overlay" id="modal" onclick="if(event.target===this)closeModal()">
+    <div class="modal-card">
+      <button class="mclose" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+      <h2>Log in or create an account</h2>
+      <button class="authbtn x" onclick="login()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.6 8.7L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8.1-9.3L1 2h7l4.8 6.3L18.9 2zm-2.4 18h1.9L7.5 4H5.5l11 16z"/></svg>Continue with X</button>
+      <button class="authbtn x" style="background:#fff;color:var(--ink);border-color:var(--hairline)" onclick="login()"><svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4zM4 7l8 6 8-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Create an account</button>
+      <p class="terms">By signing up, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</p>
+    </div>
+  </div>
+
+  <!-- CONNECT WALLET MODAL -->
+  <div class="overlay" id="walletModal" onclick="if(event.target===this)closeWallet()">
+    <div class="modal-card">
+      <button class="mclose" onclick="closeWallet()"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+      <h2>Connect a wallet</h2>
+      <button class="authbtn" onclick="connectWallet('MetaMask')"><span class="wico" style="background:#F6851B">M</span>MetaMask</button>
+      <button class="authbtn" onclick="connectWallet('Rabby')"><span class="wico" style="background:#7084FF">R</span>Rabby</button>
+      <button class="authbtn" onclick="connectWallet('Coinbase Wallet')"><span class="wico" style="background:#0052FF">C</span>Coinbase Wallet</button>
+      <button class="authbtn" onclick="connectWallet('WalletConnect')"><span class="wico" style="background:#3B99FC">W</span>WalletConnect &middot; Reown</button>
+      <p class="terms">Connect to claim your rewards on-chain.</p>
+    </div>
+  </div>
+
+  <!-- CLAIM: SELECT STOCK SHEET -->
+  <div class="sheet-ov" id="claimSheet" onclick="if(event.target===this)closeClaim()">
+    <div class="sheet claim-sheet">
+      <div class="sheet-title"><h3 id="claimTitle">Claim in which stock?</h3><button class="mclose" style="position:static" onclick="closeClaim()"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>
+      <div class="sheet-search"><div class="searchbar"><svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="text" placeholder="Search 193 RWA stocks" oninput="filterClaim(this.value)" /></div></div>
+      <div class="sheet-body" id="claimList" style="padding-top:6px"></div>
+      <div class="sheet-foot" style="grid-template-columns:1fr"><button class="btn-submit" id="claimConfirm" disabled style="pointer-events:auto" onclick="doClaim()">Select a stock</button></div>
+    </div>
+  </div>
+
+  <!-- STOCK DETAIL SHEET -->
+  <div class="sheet-ov" id="stockSheet" onclick="if(event.target===this)closeStock()">
+    <div class="sheet stock-sheet">
+      <div class="sheet-head"><div><div class="stk" id="sTicker">NVDA</div><div class="snm" id="sName">NVIDIA</div><div class="sp"><span class="px" id="sPrice">$184.20</span><span class="chg up" id="sChg">+1.2%</span></div></div><button class="mclose" style="position:static" onclick="closeStock()"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>
+      <div class="sheet-body"><div class="tframe"><button class="tf active">1D</button><button class="tf">1W</button><button class="tf">1M</button><button class="tf">1Y</button></div><div class="chart" id="sChart"></div><div class="newshd">Latest news</div><div id="sNews"></div></div>
+      <div class="sheet-foot"><button class="foot-btn up" onclick="callFromSheet('up')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none"><path d="M12 19V5M6 11l6-6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Call Up</button><button class="foot-btn down" onclick="callFromSheet('down')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none"><path d="M12 5v14M6 13l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Call Down</button></div>
+    </div>
+  </div>
+
+  <!-- SUBMIT SHARE CARD -->
+  <div class="overlay" id="submitShare" onclick="if(event.target===this)closeSubmitShare()">
+    <div class="share-card">
+      <button class="mclose" onclick="closeSubmitShare()" style="color:#fff;background:rgba(255,255,255,.14)"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+      <div class="flex-face">
+        <div class="ftop"><div class="wordmark"><span class="mark"><svg viewBox="0 0 24 24" fill="none"><path d="M4 20L20 4M20 4h-7M20 4v7" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Tell</div><div class="fdate">TOMORROW &middot; @hawabuilds</div></div>
+        <h3>My 10 picks for tomorrow</h3>
+        <div class="pickgrid" id="sharePicks"></div>
+      </div>
+      <div class="share-foot">
+        <button class="btn-x" onclick="shareX('these are my 10 picks for tomorrow. Head over to tell.xyz to play for the chance to earn some RWA.')"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.6 8.7L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8.1-9.3L1 2h7l4.8 6.3L18.9 2zm-2.4 18h1.9L7.5 4H5.5l11 16z"/></svg>Share on X</button>
+        <button class="btn-ghost" onclick="closeSubmitShare()">Maybe later</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLAIM SHARE CARD -->
+  <div class="overlay" id="claimShare" onclick="if(event.target===this)closeClaimShare()">
+    <div class="share-card">
+      <div class="flex-face claimface">
+        <div class="checkwrap"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#04230A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3 id="claimShareTitle">Claimed $12.40 in NVDA</h3>
+        <p>Your reward is on its way to your wallet.</p>
+      </div>
+      <div class="share-foot">
+        <button class="btn-x" id="claimShareBtn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.6 8.7L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8.1-9.3L1 2h7l4.8 6.3L18.9 2zm-2.4 18h1.9L7.5 4H5.5l11 16z"/></svg>Share on X</button>
+        <button class="btn-ghost" onclick="closeClaimShare()">Done</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const STOCKS=[
+    {t:'NVDA',n:'NVIDIA',p:'$184.20',c:'+1.2%',d:'up',s:''},{t:'AAPL',n:'Apple',p:'$228.51',c:'-0.4%',d:'down',s:''},
+    {t:'TSLA',n:'Tesla',p:'$421.06',c:'+2.8%',d:'up',s:''},{t:'HOOD',n:'Robinhood',p:'$118.90',c:'+0.9%',d:'up',s:''},
+    {t:'AMZN',n:'Amazon',p:'$214.30',c:'+0.6%',d:'up',s:''},{t:'MSFT',n:'Microsoft',p:'$498.10',c:'+0.3%',d:'up',s:''},
+    {t:'GOOGL',n:'Alphabet',p:'$196.75',c:'-0.2%',d:'down',s:'google'},{t:'META',n:'Meta',p:'$612.40',c:'+1.1%',d:'up',s:'facebook'},
+    {t:'COIN',n:'Coinbase',p:'$342.60',c:'+3.4%',d:'up',s:''},{t:'NFLX',n:'Netflix',p:'$902.15',c:'+0.8%',d:'up',s:''},
+    {t:'AMD',n:'AMD',p:'$168.40',c:'+1.9%',d:'up',s:''},{t:'SPY',n:'S&P 500',p:'$602.90',c:'+0.4%',d:'up',s:'spy index'},
+  ];
+  const SPARK_UP='M0,26 L14,22 L28,24 L42,16 L56,18 L70,10 L84,13 L100,4';
+  const SPARK_DN='M0,4 L14,8 L28,6 L42,14 L56,11 L70,19 L84,16 L100,26';
+  function spark(d){const c=d==='up'?'#00C805':'#FF5A52';return `<svg class="spark" viewBox="0 0 100 30" preserveAspectRatio="none" fill="none"><path d="${d==='up'?SPARK_UP:SPARK_DN}" stroke="${c}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`}
+  document.getElementById('stockGrid').innerHTML=STOCKS.map((s,i)=>`
+    <div class="scard" data-i="${i}" data-t="${s.t}" data-n="${s.n}" data-s="${s.s}" onclick="openStock(${i})">
+      <div class="scard-id"><div class="tk">${s.t}</div><div class="nm">${s.n}</div></div>${spark(s.d)}
+      <div class="scard-price"><span class="px">${s.p}</span><span class="chg ${s.d}">${s.c}</span></div>
+      <div class="scard-calls" onclick="event.stopPropagation()"><button class="cbtn up" onclick="pick(this)">&#9650; Up</button><button class="cbtn down" onclick="pick(this)">&#9660; Down</button></div>
+    </div>`).join('');
+
+  function openModal(){document.getElementById('modal').classList.add('show')}
+  function closeModal(){document.getElementById('modal').classList.remove('show')}
+  function login(){closeModal();document.getElementById('login').classList.remove('active');document.getElementById('dashboard').classList.add('active');renderRewards()}
+  function logout(){document.getElementById('profileMenu').classList.remove('show');document.getElementById('dashboard').classList.remove('active');document.getElementById('login').classList.add('active')}
+  function toggleMenu(e){e.stopPropagation();document.getElementById('profileMenu').classList.toggle('show')}
+  document.addEventListener('click',function(e){const p=document.getElementById('profile');if(p&&!p.contains(e.target))document.getElementById('profileMenu').classList.remove('show')});
+  function switchTab(btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+btn.dataset.tab).classList.add('active');document.getElementById('submitBar').classList.toggle('show',btn.dataset.tab==='play');document.querySelector('.scroll').scrollTop=0}
+
+  /* picks */
+  function pickedCards(){return[...document.querySelectorAll('#stockGrid .scard.picked')]}
+  function pickDirect(card,dir){const up=card.querySelector('.cbtn.up'),dn=card.querySelector('.cbtn.down'),t=dir==='up'?up:dn;if(t.classList.contains('sel')){t.classList.remove('sel');card.classList.remove('picked');updateSubmit();return}if(!card.classList.contains('picked')&&pickedCards().length>=10){flashSubmit();return}up.classList.remove('sel');dn.classList.remove('sel');t.classList.add('sel');card.classList.add('picked');updateSubmit()}
+  function pick(btn){pickDirect(btn.closest('.scard'),btn.classList.contains('up')?'up':'down')}
+  function updateSubmit(){const n=pickedCards().length,b=document.getElementById('submitBtn');b.querySelector('.cnt').textContent=n+'/10';if(n>=10){b.classList.add('ready');b.classList.remove('done');b.disabled=false;b.querySelector('.lbl').textContent='Lock in tomorrow\u2019s calls'}else{b.classList.remove('ready','done');b.disabled=true;b.querySelector('.lbl').textContent='Pick tomorrow\u2019s calls'}}
+  function flashSubmit(){const b=document.getElementById('submitBtn');b.classList.add('flash');setTimeout(()=>b.classList.remove('flash'),400)}
+  function submitCalls(){if(pickedCards().length<10)return;const b=document.getElementById('submitBtn');b.classList.remove('ready');b.classList.add('done');b.disabled=true;b.innerHTML='\u2713 10 calls locked for tomorrow';
+    document.getElementById('sharePicks').innerHTML=pickedCards().map(c=>{const dir=c.querySelector('.cbtn.up').classList.contains('sel')?'up':'down';return `<div class="pchip"><span class="pt">${c.dataset.t}</span><span class="pd ${dir}">${dir==='up'?'\u25B2':'\u25BC'}</span></div>`}).join('');
+    document.getElementById('submitShare').classList.add('show')}
+  function closeSubmitShare(){document.getElementById('submitShare').classList.remove('show')}
+
+  /* stock detail */
+  let currentIndex=null;
+  function openStock(i){currentIndex=i;const s=STOCKS[i];document.getElementById('sTicker').textContent=s.t;document.getElementById('sName').textContent=s.n;document.getElementById('sPrice').textContent=s.p;const ch=document.getElementById('sChg');ch.textContent=s.c;ch.className='chg '+s.d;drawChart(s.d);renderNews(s.n);document.getElementById('stockSheet').classList.add('show')}
+  function closeStock(){document.getElementById('stockSheet').classList.remove('show')}
+  function drawChart(dir){const col=dir==='up'?'#00C805':'#FF5A52';const line=dir==='up'?'M0,120 C40,110 60,116 95,92 C130,68 150,80 195,58 C235,40 260,50 300,24 L320,14':'M0,14 C40,26 60,20 95,44 C130,66 150,56 195,78 C235,96 260,86 300,110 L320,120';document.getElementById('sChart').innerHTML=`<svg viewBox="0 0 320 150" width="100%" height="100%" preserveAspectRatio="none"><defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity="0.22"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs><path d="${line} L320,150 L0,150 Z" fill="url(#cg)"/><path d="${line}" fill="none" stroke="${col}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`}
+  function renderNews(name){const it=[{h:`${name} climbs as analysts raise price targets`,s:'Bloomberg',t:'2h ago'},{h:`What's driving ${name}'s move today`,s:'CNBC',t:'5h ago'},{h:`${name} in focus ahead of next earnings`,s:'Reuters',t:'1d ago'}];document.getElementById('sNews').innerHTML=it.map(a=>`<div class="article"><div class="ah">${a.h}</div><div class="am">${a.s} &middot; ${a.t}</div></div>`).join('')}
+  function callFromSheet(dir){if(currentIndex!==null)pickDirect(document.querySelector('.scard[data-i="'+currentIndex+'"]'),dir);closeStock()}
+
+  function setLayout(m,btn){const g=document.getElementById('stockGrid');g.classList.toggle('list',m==='list');g.classList.toggle('grid',m==='grid');document.querySelectorAll('.lay-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+  function searchStocks(q){q=q.trim().toLowerCase();document.querySelectorAll('#stockGrid .scard').forEach(c=>{const t=(c.dataset.n+' '+c.dataset.t+' '+c.dataset.s).toLowerCase();c.style.display=t.includes(q)?'':'none'})}
+  function shareX(text){window.open('https://x.com/intent/tweet?text='+encodeURIComponent(text),'_blank')}
+
+  /* ---------- REWARDS / WALLET / CLAIM ---------- */
+  let walletConnected=false, walletAddr='', walletName='';
+  let readyClaims=[{id:'lb',name:'Leaderboard payout',sub:'Top 20 \u00b7 last season',amount:12.40},{id:'welcome',name:'Welcome reward',sub:'First tasks done',amount:10.00}];
+  let claimHistory=[{date:'12 Aug 2026',name:'Leaderboard payout',amount:8.10,stock:'TSLA'},{date:'9 Aug 2026',name:'Leaderboard payout',amount:5.60,stock:'NVDA'}];
+  let pendingReward=null, selectedStock=null;
+  const money=n=>'$'+n.toFixed(2);
+
+  function rIcon(id){
+    if(id==='lb') return '<svg viewBox="0 0 24 24" fill="none"><path d="M8 21h8M12 17.5V21M6 4h12v3.5a6 6 0 01-12 0V4zM6 6.5H4V8a3 3 0 002.5 2.95M18 6.5h2V8a3 3 0 01-2.5 2.95" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    return '<svg viewBox="0 0 24 24" fill="none"><path d="M20 12v8H4v-8M2.5 8h19v4h-19zM12 20V8M12 8H8.2A2.1 2.1 0 019.6 4.3C11 4.3 12 6 12 8zM12 8h3.8A2.1 2.1 0 0014.4 4.3C13 4.3 12 6 12 8z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+  function renderRewards(){
+    const total=readyClaims.reduce((a,b)=>a+b.amount,0);
+    const wallet = walletConnected
+      ? `<div class="wallet-card"><div class="wl"><span class="connected-dot"></span><div><b>${walletName}</b><div class="addr">${walletAddr}</div></div></div><button class="wbtn ghost" onclick="disconnectWallet()">Disconnect</button></div>`
+      : `<div class="wallet-card"><div class="wl"><div class="wi"><svg viewBox="0 0 24 24" fill="none"><path d="M3 9a2 2 0 012-2h13a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V9zM3 9V7a2 2 0 012-2h11M17 13.5h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><b>Connect a wallet</b><div class="lbl">Required to claim rewards</div></div></div><button class="wbtn" onclick="openWallet()">Connect</button></div>`;
+    const ready = readyClaims.length ? readyClaims.map(r=>`
+      <div class="rcard"><div class="ricon">${rIcon(r.id)}</div><div class="mid"><div class="cname">${r.name}</div><div class="cmeta"><b>${money(r.amount)}</b> \u00b7 ${r.sub}</div></div><button class="claimbtn" onclick="startClaim('${r.id}')">Claim</button></div>`).join('') : `<div class="empty">Nothing to claim right now.</div>`;
+    const hist = claimHistory.length ? `<div class="histcard">`+claimHistory.map(h=>`<div class="hrow"><div><div class="cname">${h.name}</div><div class="cmeta">${h.date} \u00b7 paid in ${h.stock}</div></div><div class="amt">${money(h.amount)}</div></div>`).join('')+`</div>` : `<div class="empty">No claims yet.</div>`;
+    document.getElementById('rewardsBody').innerHTML=`
+      <div class="rew-title">Rewards</div>
+      <div class="claim-hero"><div class="k">AVAILABLE TO CLAIM</div><div class="big">${money(total)}</div><div class="n">Claim to your wallet in the stock of your choice.</div></div>
+      ${wallet}
+      <div class="seclabel">READY TO CLAIM</div>${ready}
+      <div class="seclabel">HISTORY</div>${hist}`;
+  }
+  function openWallet(){document.getElementById('walletModal').classList.add('show')}
+  function closeWallet(){document.getElementById('walletModal').classList.remove('show')}
+  function connectWallet(name){walletConnected=true;walletName=name;walletAddr='0x8F3c\u20264A21b';closeWallet();renderRewards();if(pendingReward)openClaim()}
+  function disconnectWallet(){walletConnected=false;pendingReward=null;renderRewards()}
+
+  function startClaim(id){pendingReward=readyClaims.find(r=>r.id===id);if(!walletConnected){openWallet();return}openClaim()}
+  function openClaim(){selectedStock=null;document.getElementById('claimTitle').textContent='Claim '+money(pendingReward.amount)+' in';renderClaimList('');const c=document.getElementById('claimConfirm');c.disabled=true;c.classList.remove('ready');c.textContent='Select a stock';document.getElementById('claimSheet').classList.add('show')}
+  function closeClaim(){document.getElementById('claimSheet').classList.remove('show')}
+  function renderClaimList(q){q=q.trim().toLowerCase();document.getElementById('claimList').innerHTML=STOCKS.filter(s=>(s.n+' '+s.t+' '+s.s).toLowerCase().includes(q)).map(s=>`<div class="selrow" data-t="${s.t}" onclick="selectStock('${s.t}',this)"><div class="l"><div><div class="tk">${s.t}</div><div class="nm">${s.n}</div></div></div><div class="rc"></div></div>`).join('')}
+  function filterClaim(q){renderClaimList(q);if(selectedStock){const el=document.querySelector('#claimList .selrow[data-t="'+selectedStock+'"]');if(el)el.classList.add('sel')}}
+  function selectStock(t,el){selectedStock=t;document.querySelectorAll('#claimList .selrow').forEach(r=>r.classList.remove('sel'));el.classList.add('sel');const c=document.getElementById('claimConfirm');c.disabled=false;c.classList.add('ready');c.textContent='Claim '+money(pendingReward.amount)+' in '+t}
+  function doClaim(){if(!selectedStock||!pendingReward)return;const r=pendingReward;readyClaims=readyClaims.filter(x=>x.id!==r.id);claimHistory.unshift({date:'17 Aug 2026',name:r.name,amount:r.amount,stock:selectedStock});closeClaim();renderRewards();
+    document.getElementById('claimShareTitle').textContent='Claimed '+money(r.amount)+' in '+selectedStock;
+    const txt='I just claimed '+money(r.amount)+' of '+selectedStock+' on Tell. Play at tell.xyz to earn RWA.';
+    document.getElementById('claimShareBtn').onclick=()=>shareX(txt);
+    pendingReward=null;selectedStock=null;
+    document.getElementById('claimShare').classList.add('show')}
+  function closeClaimShare(){document.getElementById('claimShare').classList.remove('show')}
+
+  renderRewards();
+</script>
+</body>
+</html>
